@@ -1,0 +1,93 @@
+---
+title: "Compiler"
+author: "Patrisha C. Miller"
+date: "2024-07-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Compiler
+
+Uses the input of a folder filled with other monthly data folders and outputs into one folder, combining all of the loggers with the same name per month/download into one file each.
+
+```{r, echo=FALSE,include=FALSE}
+
+#Load in packages
+library(readxl);library(writexl);library(dplyr);library(fs)
+
+```
+
+## Main Funtion
+
+```{r}
+
+consolidate_logger_data <- function(input_folder, output_folder, datetime_col_index = 2) {
+  # List all monthly folders in the main folder
+  monthly_folders <- dir_ls(input_folder, type = "directory")
+  
+  # Initialize a list to store data for each logger
+  logger_data <- list()
+  
+  # Loop through each monthly folder
+  for (monthly_folder in monthly_folders) {
+    # List all Excel files in the monthly folder
+    excel_files <- dir_ls(monthly_folder, glob = "*.xlsx")
+    
+    # Process each Excel file
+    for (excel_file in excel_files) {
+      # Extract the logger name from the file name
+      logger_name <- sub(" \\d{4}-\\d{2}-\\d{2}.*", "", basename(excel_file))
+      
+      # Read the Excel file
+      data <- read_excel(excel_file)
+      
+      # Initialize the list for this logger if it doesn't exist
+      if (is.null(logger_data[[logger_name]])) {
+        logger_data[[logger_name]] <- list()
+      }
+      
+      # Append data to the corresponding logger's list
+      logger_data[[logger_name]] <- append(logger_data[[logger_name]], list(data))
+    }
+  }
+  
+  # Create the output folder if it doesn't exist
+  if (!dir_exists(output_folder)) {
+    dir_create(output_folder)
+  }
+  
+  # Loop through the list of loggers
+  for (logger_name in names(logger_data)) {
+    # Combine data for the logger
+    combined_data <- bind_rows(logger_data[[logger_name]])
+    
+    # Remove duplicate date-time entries, based on the date-time column index
+    combined_data <- combined_data %>%
+      distinct(across(all_of(names(combined_data)[datetime_col_index])), .keep_all = TRUE)
+    
+    # Write the consolidated data to an Excel file
+    write_xlsx(combined_data, path = file.path(output_folder, paste0(logger_name, ".xlsx")))
+  }
+}
+
+```
+
+The following are my own personal input and output folders that link to my desktop. Hopefully I can figure out how to get it to link to git or some other online resource.
+
+```{r}
+
+input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data FIXED DATES"    
+output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2"
+
+```
+
+## Using the Function
+
+```{r}
+
+consolidate_logger_data(input_folder, output_folder)
+
+```
