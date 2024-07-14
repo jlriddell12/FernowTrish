@@ -1,0 +1,67 @@
+---
+title: "Cosine Models"
+author: "Patrisha C. Miller"
+date: "2024-07-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Cosine Models
+
+The following packages will be needed.
+
+```{r packages}
+library(ggplot2);library(dplyr);library(readxl);library(tidyverse)
+```
+
+## Single File Version
+
+The file links to my desktop, will change in the future.
+
+```{r data frame organization}
+# Read in file
+d <-read_excel("C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2\\Camp Hollow water.xlsx")
+
+# Change Column names so they're easy to work with
+colnames(d) <- c('obs', 'date', 'temp')
+
+# Remove random blank columns
+d <- d[,-4] ; d <- d[,-4]
+
+#Setting a start date
+startDate <- as.POSIXct("1900-01-01", tz = "UTC")
+
+# New column that has the difference in days
+d$dateNumeric <- as.numeric(difftime(d$date, startDate, units = "days"))
+
+# Reference date to create a date decimal column
+refDate <- as.POSIXct("2023-01-01", tz = "UTC")
+ref <- as.numeric(difftime(refDate, startDate, units = 'days'))
+
+d$decimalDate <- (d$dateNumeric - ref)/365
+
+# Average temp
+avTemp <- mean(d$temp, na.rm = T)
+
+# New column with Mean Error
+d$meanE <- (d$temp - avTemp)^2
+
+```
+
+The model
+
+```{r the model}
+
+#Use linear model function to estimate temperature based on the date-time yearly fraction using a fourier series
+temp2 <- lm(temp ~ sin(2*pi*decimalDate) + cos(2*pi*decimalDate),data=d) 
+
+#Create a vector of the estimated values
+TempModel <- temp2$fitted.values
+
+# The plot
+plot(TempModel)
+
+```
