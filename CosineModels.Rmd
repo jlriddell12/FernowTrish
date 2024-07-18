@@ -23,7 +23,10 @@ The file links to my desktop, will change in the future.
 
 ```{r data frame organization}
 # Read in file
-d <-read_excel("C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2\\Camp Hollow water.xlsx")
+
+file <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2\\Camp Hollow water.xlsx"
+
+d <-read_excel(file)
 
 # Change Column names so they're easy to work with
 colnames(d) <- c('obs', 'date', 'temp')
@@ -64,4 +67,29 @@ TempModel <- temp2$fitted.values
 # The plot
 plot(TempModel)
 
+#Making the model a data frame to put onto one graph
+e <- as.data.frame(TempModel)
+
+# Adding a row because it's one row short? This messes up one point in the graph but I am not sure how to fix it.
+e[nrow(e) + 1 , ] <- NA
+
+#Adding this to OG data frame
+d$model <- e$TempModel
+
+#Getting logger name so that it can be the title of the graph
+logger_name <- sub(" \\d{4}-\\d{2}-\\d{2}.*", "", basename(file))
+logger_name <- sub("\\.xlsx$", "", logger_name)
+
+
+ggplot(d, aes(y = temp, x = date))+
+  geom_point()+
+  geom_point(aes(y = model, x = date, color = 'red'), show.legend = F)+
+  labs(x = 'Date', y = 'Temperature (C°)', color = 'Model', title = logger_name)+
+  scale_x_datetime(expand = c(0,0))+
+  theme_classic()
+
 ```
+
+## Function Version
+
+Not doing this yet because it will do them all in R markdown and take forever to knit.
