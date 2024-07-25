@@ -53,7 +53,8 @@ d$decimalDate <- (d$dateNumeric - ref)/365
 avTemp <- mean(d$temp, na.rm = T)
 
 # New column with Mean Error
-d$meanE <- (d$temp - avTemp)^2
+d$meanError <- (d$temp - avTemp)^2
+
 
 ```
 
@@ -70,17 +71,17 @@ TempModel <- temp2$fitted.values
 #Making the model a data frame to put onto one graph
 e <- as.data.frame(TempModel)
 
-# Adding a row because it's one row short? This messes up one point in the graph but I am not sure how to fix it.
-#e[nrow(e) + 1 , ] <- NA
-
 #Adding this to OG data frame
 d$model <- e$TempModel
+
+# New column with model error
+d$modelError <- (d$temp - d$model)^2
 
 # Finding the mean of the model
 Mean <- mean(d$model, na.rm= T)
 
 # Finding the amplitude of the model
-Amplitude <- max(d$model, na.rm = T) - min(d$model, na.rm = T)
+Amplitude <- max(d$model, na.rm = T) - Mean
 
 # Finding the Phase
 #?
@@ -110,3 +111,18 @@ ggsave(filename = paste0(logger_name, ".jpg"), dpi = 500, height = 100, width = 
 
 ```
 
+## Statistics
+
+```{r stats}
+
+RSSn <- sum(d$meanError)
+
+RSSc <- sum(d$modelError)
+
+# Why is it -3?
+Fstat <- ((RSSn - RSSc)/2)/(RSSc/(nrow(d)-3))
+
+pval <- pf(Fstat, 2, (nrow(d)-3), lower.tail = F)
+
+
+```
