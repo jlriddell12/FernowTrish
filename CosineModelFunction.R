@@ -26,7 +26,7 @@ cosinemodel <- function(input_folder, output_folder) {
     
     # Compute statistics
     Mean <- mean(d$model)
-    Amplitude <- max(d$model) - min(d$model)
+    Amplitude <- max(d$model) - Mean
     
     # Extract logger name
     logger_name <- sub(" \\d{4}-\\d{2}-\\d{2}.*", "", basename(file))
