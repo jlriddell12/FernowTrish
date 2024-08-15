@@ -23,10 +23,25 @@ cosinemodel <- function(input_folder, output_folder) {
     d$meanError <- (d$temp - avTemp)^2
     temp2 <- lm(temp ~ sin(2*pi*decimalDate) + cos(2*pi*decimalDate), data = d)
     d$model <- temp2$fitted.values
+    d$modelError <- (d$temp - d$model)^2
     
     # Compute statistics
     Mean <- mean(d$model)
     Amplitude <- max(d$model) - Mean
+    
+    max_index <- which.max(d$model)
+    
+    datetime <- d$date[max_index]
+    
+    Phase <- as.numeric(format(datetime, "%j")) + 
+      (as.numeric(format(datetime, "%H")) * 3600 + 
+         as.numeric(format(datetime, "%M")) * 60 + 
+         as.numeric(format(datetime, "%S"))) / (24 * 3600)
+    
+    RSSn <- sum(d$meanError)
+    RSSc <- sum(d$modelError)
+    Fstat <- ((RSSn - RSSc)/2)/(RSSc/(nrow(d)-3))
+    pval <- pf(Fstat, 2, (nrow(d)-3), lower.tail = F)
     
     # Extract logger name
     logger_name <- sub(" \\d{4}-\\d{2}-\\d{2}.*", "", basename(file))
@@ -44,16 +59,20 @@ cosinemodel <- function(input_folder, output_folder) {
       theme_classic() +
       theme(plot.margin = unit(c(1, 5, 1, 1), "lines")) +
       annotate("text", x = x_position, y = max(d$temp), label = paste("Mean:", round(Mean, 2)), size = 4, color = "black", hjust = 0) +
-      annotate("text", x = x_position, y = max(d$temp) - 1.5, label = paste("Amplitude:", round(Amplitude, 2)), size = 4, color = "black", hjust = 0) +
-      annotate("text", x = x_position, y = max(d$temp) - 3, label = paste("Phase:",""), size = 4, color = 'black', hjust = 0)
+      annotate("text", x = x_position, y = max(d$temp) /1.16, label = paste("Amplitude:", round(Amplitude, 2)), size = 4, color = "black", hjust = 0)+
+      annotate("text", x = x_position, y= max(d$temp) /1.40, label = paste("Phase:",round(Phase,2)), size = 4, color = 'black', hjust = 0)+
+      annotate("text", x = x_position, y = max(d$temp) /4, label = paste("F = ",round(Fstat,2)),size = 4, color = 'black', hjust = 0)+
+      annotate("text", x = x_position, y = max(d$temp) /8, label = paste("p << ", pval), size = 4, color = 'black', hjust = 0)
+    
     
     # Save the plot
     ggsave(filename = file.path(output_folder, paste0(logger_name, ".jpg")), plot = p, dpi = 500, height = 100, width = 200, units = 'mm')
   }
 }
 
+#The following are shared folders, you'll have to just change the 'User', or where it says patri
 
-input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2"
-output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Cosine Models"
+input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\Trish_Summer2024\\FernowTrish\\Compiled2"
+output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\Trish_Summer2024\\FernowTrish\\Cosine Models"
 
 cosinemodel(input_folder, output_folder)

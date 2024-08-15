@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The following packages will be needed.
 
-```{r packages}
+```{r packages, }
 library(ggplot2);library(dplyr);library(readxl);library(tidyverse)
 ```
 
@@ -22,9 +22,9 @@ library(ggplot2);library(dplyr);library(readxl);library(tidyverse)
 The file links to my desktop, will change in the future.
 
 ```{r data frame organization}
-# Read in file
+# Read in file. From the shared folder, will have to change "User" (patri) to your own personal user
 
-file <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2\\Camp Hollow water.xlsx"
+file <- "C:\\Users\\patri\\OneDrive - Chatham University\\Trish_Summer2024\\FernowTrish\\Compiled2\\Camp Hollow water.xlsx"
 
 d <-read_excel(file)
 
@@ -84,13 +84,38 @@ Mean <- mean(d$model, na.rm= T)
 Amplitude <- max(d$model, na.rm = T) - Mean
 
 # Finding the Phase
-#?
 
+# Find the index of the first maximum value in the model column
+max_index <- which.max(d$model)
+
+# Get the Julian date corresponding to the first maximum value
+datetime <- d$date[max_index]
+
+Phase <- as.numeric(format(datetime, "%j")) + 
+               (as.numeric(format(datetime, "%H")) * 3600 + 
+                as.numeric(format(datetime, "%M")) * 60 + 
+                as.numeric(format(datetime, "%S"))) / (24 * 3600)
 
 #Getting logger name so that it can be the title of the graph
 logger_name <- sub(" \\d{4}-\\d{2}-\\d{2}.*", "", basename(file))
 logger_name <- sub("\\.xlsx$", "", logger_name)
+```
+## The Statistics
 
+```{r stats}
+
+RSSn <- sum(d$meanError)
+
+RSSc <- sum(d$modelError)
+
+Fstat <- ((RSSn - RSSc)/2)/(RSSc/(nrow(d)-3))
+
+pval <- pf(Fstat, 2, (nrow(d)-3), lower.tail = F)
+
+```
+## The Graph
+
+```{r graph}
 
 # Define the x position for annotation outside the graph
 x_position <- max(d$date) + 30 * 86400  # 30 days offset
@@ -104,25 +129,12 @@ ggplot(d, aes(y = temp, x = date)) +
   theme_classic() +
   theme(plot.margin = unit(c(1, 5, 1, 1), "lines")) +
   annotate("text", x = x_position, y = max(d$temp), label = paste("Mean:", round(Mean, 2)), size = 4, color = "black", hjust = 0) +
-  annotate("text", x = x_position, y = max(d$temp) - 1.5, label = paste("Amplitude:", round(Amplitude, 2)), size = 4, color = "black", hjust = 0)+
-  annotate("text", x = x_position, y= max(d$temp) - 3, label = paste("Phase:",""), size = 4, color = 'black', hjust = 0)
+  annotate("text", x = x_position, y = max(d$temp) /1.16, label = paste("Amplitude:", round(Amplitude, 2)), size = 4, color = "black", hjust = 0)+
+  annotate("text", x = x_position, y= max(d$temp) /1.40, label = paste("Phase:",round(Phase,2)), size = 4, color = 'black', hjust = 0)+
+  annotate("text", x = x_position, y = max(d$temp) /4, label = paste("F = ",round(Fstat,2)),size = 4, color = 'black', hjust = 0)+
+  annotate("text", x = x_position, y = max(d$temp) /8, label = paste("p << ", pval), size = 4, color = 'black', hjust = 0)
 
-ggsave(filename = paste0(logger_name, ".jpg"), dpi = 500, height = 100, width = 200, units = 'mm')
-
-```
-
-## Statistics
-
-```{r stats}
-
-RSSn <- sum(d$meanError)
-
-RSSc <- sum(d$modelError)
-
-# Why is it -3?
-Fstat <- ((RSSn - RSSc)/2)/(RSSc/(nrow(d)-3))
-
-pval <- pf(Fstat, 2, (nrow(d)-3), lower.tail = F)
-
+#ggsave(filename = paste0(logger_name, ".jpg"), dpi = 500, height = 100, width = 200, units = 'mm')
 
 ```
+
