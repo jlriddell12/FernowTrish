@@ -16,20 +16,33 @@ Uses the input of a folder filled with other monthly data folders and outputs in
 ```{r, echo=FALSE,include=FALSE}
 
 #Load in packages
-library(readxl);library(writexl);library(dplyr);library(fs)
+library(readxl);library(writexl);library(dplyr);library(fs);library(lubridate)
 
 ```
 
 ## Main Funtion
 
+The following are my own personal input and output folders that link to my desktop. Hopefully I can figure out how to get it to link to git or some other online resource.
+
 ```{r}
 
-consolidate_logger_data <- function(input_folder, output_folder, datetime_col_index = 2) {
-  # List all monthly folders in the main folder
+input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data FIXED DATES"    
+output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2"
+
+```
+
+```{r}
+
+consolidate_logger_data <- function(input_folder, output_folder) {
+  
+  # List all subfolders (monthly folders) within the input folder
   monthly_folders <- dir_ls(input_folder, type = "directory")
   
   # Initialize a list to store data for each logger
   logger_data <- list()
+  
+  # Define a pattern to match the date in the filename
+  date_pattern <- "\\d{4}-\\d{2}-\\d{2}"
   
   # Loop through each monthly folder
   for (monthly_folder in monthly_folders) {
@@ -38,11 +51,21 @@ consolidate_logger_data <- function(input_folder, output_folder, datetime_col_in
     
     # Process each Excel file
     for (excel_file in excel_files) {
-      # Extract the logger name from the file name
-      logger_name <- sub(" \\d{4}-\\d{2}-\\d{2}.*", "", basename(excel_file))
+      # Extract the logger name (part before the date)
+      logger_name <- sub(paste0(" ", date_pattern, ".*"), "", basename(excel_file))
       
       # Read the Excel file
       data <- read_excel(excel_file)
+      
+      # Remove the first column as it is arbitrary
+      data <- data[-1]
+      
+      # Rename the first and second columns to "DateTime" and "Temperature" respectively
+      colnames(data)[1] <- "DateTime"
+      colnames(data)[2] <- "Temperature"
+      
+      # Convert the Excel numeric date-time values to POSIXct
+      data$DateTime <- as.POSIXct(data$DateTime, origin = "1899-12-30", tz = "UTC")
       
       # Initialize the list for this logger if it doesn't exist
       if (is.null(logger_data[[logger_name]])) {
@@ -64,9 +87,13 @@ consolidate_logger_data <- function(input_folder, output_folder, datetime_col_in
     # Combine data for the logger
     combined_data <- bind_rows(logger_data[[logger_name]])
     
-    # Remove duplicate date-time entries, based on the date-time column index
+    # Remove duplicate date-time entries, based on the DateTime column
     combined_data <- combined_data %>%
-      distinct(across(all_of(names(combined_data)[datetime_col_index])), .keep_all = TRUE)
+      distinct(across(all_of("DateTime")), .keep_all = TRUE)
+    
+    # Sort the data by the DateTime column
+    combined_data <- combined_data %>%
+      arrange(DateTime)
     
     # Write the consolidated data to an Excel file
     write_xlsx(combined_data, path = file.path(output_folder, paste0(logger_name, ".xlsx")))
@@ -75,14 +102,7 @@ consolidate_logger_data <- function(input_folder, output_folder, datetime_col_in
 
 ```
 
-The following are my own personal input and output folders that link to my desktop. Hopefully I can figure out how to get it to link to git or some other online resource.
 
-```{r}
-
-input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data FIXED DATES"    
-output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2"
-
-```
 
 ## Using the Function
 
