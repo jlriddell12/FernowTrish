@@ -26,11 +26,11 @@ water <- st_read("C:\\Users\\patri\\OneDrive - Chatham University\\Trish_Summer2
 water <- st_transform(water, crs = st_crs("+proj=utm +zone=17 +datum=WGS84"))
 
 
-both <- st_intersection(water, fernow)
+water2 <- st_intersection(water, fernow)
 
 ggplot()+
   geom_sf(data=fernow, fill = 'darkgreen', color = 'darkgreen')+
-  geom_sf(data = both, fill = NA, color = 'lightblue')+
+  geom_sf(data = water2, fill = NA, color = 'lightblue')+
   theme_minimal()
   
 
