@@ -83,7 +83,6 @@ Mean <- mean(d$model, na.rm= T)
 # Finding the amplitude of the model
 Amplitude <- max(d$model, na.rm = T) - Mean
 
-# Finding the Phase
 
 # Find the index of the first maximum value in the model column
 max_index <- which.max(d$model)
@@ -91,6 +90,7 @@ max_index <- which.max(d$model)
 # Get the Julian date corresponding to the first maximum value
 datetime <- d$date[max_index]
 
+#Finding the phase
 Phase <- as.numeric(format(datetime, "%j")) + 
                (as.numeric(format(datetime, "%H")) * 3600 + 
                 as.numeric(format(datetime, "%M")) * 60 + 
