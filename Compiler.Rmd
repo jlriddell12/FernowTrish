@@ -26,8 +26,8 @@ The following are my own personal input and output folders that link to my deskt
 
 ```{r}
 
-input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data FIXED DATES"    
-output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled2"
+input_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data"    
+output_folder <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled3"
 
 ```
 

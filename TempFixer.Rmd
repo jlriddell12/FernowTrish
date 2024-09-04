@@ -23,13 +23,13 @@ fixTemps <- function(input, output) {
     file_base_name <- tools::file_path_sans_ext(basename(input_file))
     
     # Create the output file name with "_FIXED" appended
-    output_file <- file.path(output, paste0(file_base_name, "_FIXED.xlsx"))
+    output_file <- file.path(output, paste0(file_base_name, ".xlsx"))
     
     # Read the Excel file into a dataframe
     df <- read_excel(input_file)
     
-    # Convert the second column to date-time format using base R
-    df$DateTime <- as.POSIXct(df[[2]], format = "%m/%d/%Y %H:%M:%S")
+    # Convert the second column to date-time format
+    df$DateTime <- as.POSIXct(df[[1]], format = "%m/%d/%Y %H:%M:%S")
     
     # Extract year and month for grouping
     df$YearMonth <- format(df$DateTime, "%Y-%m")
@@ -43,11 +43,11 @@ fixTemps <- function(input, output) {
       subset_df <- df[df$YearMonth == ym, ]
       
       # Calculate the mean and standard deviation of the temperature for the current month
-      mean_temp <- mean(subset_df[[3]], na.rm = TRUE)
-      sd_temp <- sd(subset_df[[3]], na.rm = TRUE)
+      mean_temp <- mean(subset_df[[2]], na.rm = TRUE)
+      sd_temp <- sd(subset_df[[2]], na.rm = TRUE)
       
       # Identify rows to remove (more than 2 standard deviations away from the mean)
-      rows_to_remove <- abs(subset_df[[3]] - mean_temp) > 2 * sd_temp
+      rows_to_remove <- abs(subset_df[[2]] - mean_temp) > 2 * sd_temp
       
       # Update the logical vector to mark rows to remove
       keep_rows[df$YearMonth == ym] <- !rows_to_remove
@@ -57,10 +57,10 @@ fixTemps <- function(input, output) {
     df <- df[keep_rows, ]
     
     # Remove the unnecessary helper columns 
-    df <- df[, -c(4, which(names(df) == "YearMonth"))]
+    df <- df[, -c(3, which(names(df) == "YearMonth"))]
     
     # Save the fixed dataframe to a new excel file in the output folder
-    write.xlsx(df, output_file)
+    write_xlsx(df, output_file)
   }
 }
 
@@ -71,8 +71,8 @@ fixTemps <- function(input, output) {
 This will need to be changed to an accessible/online folder and not one from my personal desktop.
 
 ```{r}
-input <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data\\June"
-output <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Monthly Data FIXED DATES\\June FIXED"
+input <- 'C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled3'
+output <- "C:\\Users\\patri\\OneDrive - Chatham University\\2024 Summer\\Compiled Fixed Dates"
 ```
 
 ## Using the Function
